@@ -40,32 +40,49 @@ Django Vkontakte Wall Statistic
 Примеры использования
 ---------------------
 
-### Получение статистики группы
+### Получение статистики сообщения
 
-Получение статистики группы через API
-
-    >>> from vkontakte_groups.models import Group
-    >>> group = Group.remote.fetch(ids=[16297716])[0]
-    >>> group.fetch_statistic(source='api')
+    >>> from vkontakte_wall.models import Post
+    >>> from datetime import date, timedelta
+    >>> post = Post.objects.get(remote_id=...)
+    >>> post.fetch_statistic(date_from=date.today()-timedelta(1), date_to=date.today())
 
 Статистика, полученная через API доступна через менеджер
 
-    >>> stat = group.statistics_api.all()[0]
+    >>> stat = post.statistics.all()[0]
     >>> stat.__dict__
-    {'_state': <django.db.models.base.ModelState at 0xa2812ac>,
-     'age_18': 240,
-     'age_18_21': 86,
-     'age_21_24': 75,
-     'age_24_27': 59,
-     'age_27_30': 31,
-     'age_30_35': 23,
-     'age_35_45': 9,
-     'age_45': 13,
-     'date': datetime.date(2012, 3, 14),
-     'females': 295,
-     'fetched': datetime.datetime(2012, 9, 12, 0, 50, 42, 597930),
-     'group_id': 14,
-     'id': 182,
-     'males': 406,
-     'views': 1401,
-     'visitors': 702}
+    {'_state': <django.db.models.base.ModelState at 0x9b5e34c>,
+     'date': datetime.date(2014, 2, 23),
+     'fetched': datetime.datetime(2014, 2, 27, 22, 18, 26, 628260),
+     'id': 200,
+     'link_clicks': 0,
+     'period': 1,
+     'post_id': 229537,
+     'reach': 1,
+     'reach_age_18': 0,
+     'reach_age_18_21': 0,
+     'reach_age_21_24': 0,
+     'reach_age_24_27': 0,
+     'reach_age_27_30': 0,
+     'reach_age_30_35': 0,
+     'reach_age_35_45': 0,
+     'reach_age_45': 0,
+     'reach_females': 1,
+     'reach_females_age_18': 0,
+     'reach_females_age_18_21': 0,
+     'reach_females_age_21_24': 0,
+     'reach_females_age_24_27': 0,
+     'reach_females_age_27_30': 0,
+     'reach_females_age_30_35': 0,
+     'reach_females_age_35_45': 0,
+     'reach_females_age_45': 0,
+     'reach_males': 0,
+     'reach_males_age_18': 0,
+     'reach_males_age_18_21': 0,
+     'reach_males_age_21_24': 0,
+     'reach_males_age_24_27': 0,
+     'reach_males_age_27_30': 0,
+     'reach_males_age_30_35': 0,
+     'reach_males_age_35_45': 0,
+     'reach_males_age_45': 0,
+     'reach_subscribers': 0}
