@@ -18,6 +18,8 @@ log = logging.getLogger('vkontakte_wall_statistic')
 class PostStatisticRemoteManager(VkontakteManager):
 
     def fetch(self, post, date_from, date_to, *args, **kwargs):
+        kwargs['date_from'] = date_from
+        kwargs['date_to'] = date_to
         kwargs['group_id'] = post.wall_owner.remote_id
         kwargs['post_id'] = post.remote_id_short
         kwargs['extra_fields'] = {'post_id': post.id}
@@ -29,7 +31,7 @@ class PostStatisticAbstract(models.Model):
         abstract = True
 
     reach = models.PositiveIntegerField(u'Полный охват', null=True)
-    reach_subsribers = models.PositiveIntegerField(u'Охват подписчиков', null=True)
+    reach_subscribers = models.PositiveIntegerField(u'Охват подписчиков', null=True)
     link_clicks = models.PositiveIntegerField(u'Клики по ссылкам', null=True)
 
     reach_males = models.PositiveIntegerField(u'Охват по мужчинам', null=True)
@@ -63,7 +65,7 @@ class PostStatisticAbstract(models.Model):
     reach_females_age_45 = models.PositiveIntegerField(u'Охват по женщинам от 45', null=True)
 
 
-class PostStatistic(PostStatisticAbstract):
+class PostStatistic(VkontakteModel, PostStatisticAbstract):
     '''
     Post statistic model collecting information
     '''
@@ -76,7 +78,7 @@ class PostStatistic(PostStatisticAbstract):
 
     post = models.ForeignKey(Post, verbose_name=u'Сообщение', related_name='statistics')
     date = models.DateField(u'Дата', db_index=True)
-    period = models.PositiveSmallIntegerField(u'Период', choices=((1, u'День'),(30, u'Месяц'),), default=1, db_index=True)
+    period = models.PositiveSmallIntegerField(u'Период', choices=((1, u'День'), (30, u'Месяц')), default=1, db_index=True)
 
     objects = models.Manager()
     remote = PostStatisticRemoteManager(remote_pk=('post','date'), methods={
@@ -103,12 +105,29 @@ class PostStatistic(PostStatisticAbstract):
                 '30-35': 'age_30_35',
                 '35-45': 'age_35_45',
                 '45-100': 'age_45',
+            },
+            'sex_age': {
+                'f;12-18': 'females_age_18',
+                'f;18-21': 'females_age_18_21',
+                'f;21-24': 'females_age_21_24',
+                'f;24-27': 'females_age_24_27',
+                'f;27-30': 'females_age_27_30',
+                'f;30-35': 'females_age_30_35',
+                'f;35-45': 'females_age_35_45',
+                'f;45-100': 'females_age_45',
+                'm;12-18': 'males_age_18',
+                'm;18-21': 'males_age_18_21',
+                'm;21-24': 'males_age_21_24',
+                'm;24-27': 'males_age_24_27',
+                'm;27-30': 'males_age_27_30',
+                'm;30-35': 'males_age_30_35',
+                'm;35-45': 'males_age_35_45',
+                'm;45-100': 'males_age_45',
             }
         }
-        for response_field in ['sex','age']:
-            if response.get(response_field):
-                for item in response.get(response_field):
-                    response[fields_map[response_field][item['value']]] = item['reach']
+        for response_field in ['sex','age','sex_age']:
+            for item in response.pop(response_field, []):
+                if 'value' in item and 'reach' in item:
+                    response['reach_' + fields_map[response_field][item['value']]] = item['reach']
 
-        import ipdb; ipdb.set_trace()
-        super(PostStatistic, self).parse(response)
+        return super(PostStatistic, self).parse(response)

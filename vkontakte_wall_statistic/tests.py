@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from django.test import TestCase
 from models import PostStatistic
-from vkontakte_wall.factories import PostFactory
-from datetime import datetime, timedelta
+from vkontakte_wall.factories import PostFactory, GroupFactory
+from datetime import date, timedelta
+import simplejson as json
 
 GROUP_ID = 16297716
 POST_ID = '-16297716_262399'
@@ -18,15 +19,15 @@ class VkontakteWallStatisticTest(TestCase):
                   {"reach": 555, "value": "30-35"},
                   {"reach": 363, "value": "35-45"},
                   {"reach": 357, "value": "45-100"}],
-                 "cities": [{"name": u"\u0414\u043e\u043d\u0435\u0446\u043a", "reach": 38, "value": 223},
-                  {"name": u"\u041b\u044c\u0432\u043e\u0432", "reach": 25, "value": 1057},
-                  {"name": u"\u0421\u0443\u0440\u0433\u0443\u0442", "reach": 18, "value": 136},
-                  {"name": u"\u042""u0435\u0440\u0441\u043e\u043d", "reach": 14, "value": 427}],
+                 "cities": [{"name": "Донецк", "reach": 38, "value": 223},
+                  {"name": "Воронеж", "reach": 25, "value": 1057},
+                  {"name": "Рио", "reach": 18, "value": 136},
+                  {"name": "Тируванамалай", "reach": 14, "value": 427}],
                  "countries": [{"code": "RU",
-                   "name": u"\u0420\u043e\u0441\u0441\u0438\u044f",
+                   "name": "Россия",
                    "reach": 6548,
                    "value": 1},
-                  {"code": "US", "name": u"\u0421\u0428\u0410", "reach": 15, "value": 9}],
+                  {"code": "US", "name": "США", "reach": 15, "value": 9}],
                  "day": "2014-02-27",
                  "link_clicks": 10,
                  "reach": 8243,
@@ -88,17 +89,18 @@ class VkontakteWallStatisticTest(TestCase):
         self.assertEqual(instance.reach_females_age_35_45, 243)
         self.assertEqual(instance.reach_females_age_45, 186)
 
-#     def test_fetch_statistic(self):
-#
-#         group = GroupFactory(remote_id=GROUP_ID)
-#         self.assertEqual(GroupStatistic.objects.count(), 0)
-#
-#         group.fetch_statistic(source='api')
-#         self.assertNotEqual(GroupStatistic.objects.count(), 0)
-#
-#         stat = GroupStatistic.objects.all()[0]
-#         self.assertTrue(stat.views > 0)
-#         self.assertTrue(stat.visitors > 0)
-#         self.assertTrue(stat.males > 0)
-#         self.assertTrue(stat.females > 0)
-#         self.assertNotEqual(stat.date, None)
+    def test_fetch_statistic(self):
+
+        group = GroupFactory(remote_id=GROUP_ID)
+        post = PostFactory(remote_id=POST_ID, wall_owner=group)
+        self.assertEqual(PostStatistic.objects.count(), 0)
+
+        post.fetch_statistic(date_from=date.today()-timedelta(2), date_to=date.today())
+        self.assertEqual(PostStatistic.objects.count(), 3)
+
+        stat = PostStatistic.objects.all()[0]
+        self.assertEqual(stat.date, date.today())
+        self.assertTrue(stat.reach > 0)
+        self.assertTrue(stat.reach_subscribers > 0)
+        self.assertTrue(stat.reach_males > 0)
+        self.assertTrue(stat.reach_females > 0)
