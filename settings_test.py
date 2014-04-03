@@ -4,6 +4,7 @@ INSTALLED_APPS = (
     'vkontakte_users',
     'vkontakte_groups',
     'vkontakte_wall',
+    'm2m_history',
 )
 
 OAUTH_TOKENS_VKONTAKTE_CLIENT_ID = 3430034

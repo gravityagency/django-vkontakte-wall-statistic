@@ -21,6 +21,7 @@ Django Vkontakte Wall Statistic
         'vkontakte_groups',
         'vkontakte_wall',
         'vkontakte_wall_statistic',
+        'm2m_history',
     )
 
     # oauth-tokens settings
