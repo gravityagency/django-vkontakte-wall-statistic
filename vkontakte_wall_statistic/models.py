@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
-from django.db import models
-from django.dispatch import Signal
-from django.conf import settings
-from django.utils.translation import ugettext as _
-from django.core.exceptions import ImproperlyConfigured
-from vkontakte_api.models import VkontakteManager, VkontakteModel, VkontakteDeniedAccessError, VkontakteContentError
-from vkontakte_wall.models import Post
 from datetime import datetime
-from urllib import unquote
-import simplejson as json
 import logging
 import re
+from urllib import unquote
+
+from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
+from django.db import models
+from django.dispatch import Signal
+from django.utils.translation import ugettext as _
+import simplejson as json
+from vkontakte_api.models import VkontakteManager, VkontakteModel, VkontakteDeniedAccessError, VkontakteContentError
+from vkontakte_wall.models import Post
 
 log = logging.getLogger('vkontakte_wall_statistic')
 
@@ -20,13 +21,14 @@ class PostStatisticRemoteManager(VkontakteManager):
     def fetch(self, post, date_from, date_to, *args, **kwargs):
         kwargs['date_from'] = date_from
         kwargs['date_to'] = date_to
-        kwargs['group_id'] = post.wall_owner.remote_id
+        kwargs['group_id'] = post.owner.remote_id
         kwargs['post_id'] = post.remote_id_short
         kwargs['extra_fields'] = {'post_id': post.id}
         return super(PostStatisticRemoteManager, self).fetch(*args, **kwargs)
 
 
 class PostStatisticAbstract(models.Model):
+
     class Meta:
         abstract = True
 
@@ -66,6 +68,7 @@ class PostStatisticAbstract(models.Model):
 
 
 class PostStatistic(VkontakteModel, PostStatisticAbstract):
+
     '''
     Post statistic model collecting information
     '''
@@ -78,10 +81,11 @@ class PostStatistic(VkontakteModel, PostStatisticAbstract):
 
     post = models.ForeignKey(Post, verbose_name=u'Сообщение', related_name='statistics')
     date = models.DateField(u'Дата', db_index=True)
-    period = models.PositiveSmallIntegerField(u'Период', choices=((1, u'День'), (30, u'Месяц')), default=1, db_index=True)
+    period = models.PositiveSmallIntegerField(
+        u'Период', choices=((1, u'День'), (30, u'Месяц')), default=1, db_index=True)
 
     objects = models.Manager()
-    remote = PostStatisticRemoteManager(remote_pk=('post','date'), methods={
+    remote = PostStatisticRemoteManager(remote_pk=('post', 'date'), methods={
         'get': 'getPostStats',
     })
 
@@ -125,7 +129,7 @@ class PostStatistic(VkontakteModel, PostStatisticAbstract):
                 'm;45-100': 'males_age_45',
             }
         }
-        for response_field in ['sex','age','sex_age']:
+        for response_field in ['sex', 'age', 'sex_age']:
             for item in response.pop(response_field, []):
                 if 'value' in item and 'reach' in item:
                     response['reach_' + fields_map[response_field][item['value']]] = item['reach']

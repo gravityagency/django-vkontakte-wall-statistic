@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
-from django.test import TestCase
-from models import PostStatistic
-from vkontakte_wall.factories import PostFactory, GroupFactory
 from datetime import date, timedelta
+
+from django.test import TestCase
 import simplejson as json
+from vkontakte_wall.factories import PostFactory, GroupFactory
+
+from .models import PostStatistic
 
 GROUP_ID = 16297716
 POST_ID = '-16297716_262399'
+
 
 class VkontakteWallStatisticTest(TestCase):
 
@@ -54,7 +57,7 @@ class VkontakteWallStatisticTest(TestCase):
         instance.parse(json.loads(response))
         instance.save()
 
-        self.assertEqual(instance.date, date(2014,2,27))
+        self.assertEqual(instance.date, date(2014, 2, 27))
         self.assertEqual(instance.reach, 8243)
         self.assertEqual(instance.reach_subscribers, 357)
         self.assertEqual(instance.link_clicks, 10)
@@ -92,10 +95,10 @@ class VkontakteWallStatisticTest(TestCase):
     def test_fetch_statistic(self):
 
         group = GroupFactory(remote_id=GROUP_ID)
-        post = PostFactory(remote_id=POST_ID, wall_owner=group)
+        post = PostFactory(remote_id=POST_ID, owner=group)
         self.assertEqual(PostStatistic.objects.count(), 0)
 
-        post.fetch_statistic(date_from=date.today()-timedelta(2), date_to=date.today())
+        post.fetch_statistic(date_from=date.today() - timedelta(2), date_to=date.today())
         self.assertEqual(PostStatistic.objects.count(), 3)
 
         stat = PostStatistic.objects.all()[0]
