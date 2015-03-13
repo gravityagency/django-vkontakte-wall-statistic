@@ -1,16 +1,9 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
 import logging
-import re
-from urllib import unquote
 
-from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
 from django.db import models
-from django.dispatch import Signal
 from django.utils.translation import ugettext as _
-import simplejson as json
-from vkontakte_api.models import VkontakteManager, VkontakteModel, VkontakteDeniedAccessError, VkontakteContentError
+from vkontakte_api.models import VkontakteManager, VkontakteModel
 from vkontakte_wall.models import Post
 
 log = logging.getLogger('vkontakte_wall_statistic')
