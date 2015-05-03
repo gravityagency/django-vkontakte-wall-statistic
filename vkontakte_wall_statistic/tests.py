@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 from datetime import date, timedelta
 
-from django.test import TestCase
+import mock
 import simplejson as json
-from vkontakte_wall.factories import PostFactory, GroupFactory
+from django.test import TestCase
+from vkontakte_api.api import VkontakteError
+from vkontakte_wall.factories import GroupFactory, PostFactory
 
 from .models import PostStatistic
 
@@ -11,8 +13,15 @@ GROUP_ID = 16297716
 POST_ID = '-16297716_262399'
 
 
-class VkontakteWallStatisticTest(TestCase):
+def get_error(*args, **kwargs):
+    return [{"error": {"error_code": 7, "error_msg": "Permission to perform this action is denied", "request_params":
+        [{"key": "oauth", "value": "1"}, {"key": "method", "value": "stats.getPostStats"},
+         {"key": "timestamp", "value":
+             "1430579937"}, {"key": "date_from", "value": "2015-04-30"}, {"key": "post_id", "value": "262399"},
+         {"key": "date_to", "value": "2015-05-02"}, {"key": "group_id", "value": "22130230"}]}}]
 
+
+class VkontakteWallStatisticTest(TestCase):
     def test_parse_post(self):
         response = '''{"age": [{"reach": 2153, "value": "12-18"},
                   {"reach": 1113, "value": "18-21"},
@@ -93,7 +102,6 @@ class VkontakteWallStatisticTest(TestCase):
         self.assertEqual(instance.reach_females_age_45, 186)
 
     def test_fetch_statistic(self):
-
         group = GroupFactory(remote_id=GROUP_ID)
         post = PostFactory(remote_id=POST_ID, owner=group)
         self.assertEqual(PostStatistic.objects.count(), 0)
@@ -104,3 +112,13 @@ class VkontakteWallStatisticTest(TestCase):
         stat = PostStatistic.objects.all()[0]
         self.assertIsInstance(stat.date, date)
         self.assertGreater(stat.reach, 0)
+
+    @mock.patch('vkontakte.api.API._request', side_effect=lambda *a, **kw: (200, {}))
+    @mock.patch('vkontakte.api._json_iterparse', side_effect=get_error)
+    def test_fetch_statistic_error(self, *args, **kwargs):
+        group = GroupFactory(remote_id=GROUP_ID)
+        post = PostFactory(remote_id=POST_ID, owner=group)
+        self.assertEqual(PostStatistic.objects.count(), 0)
+
+        with self.assertRaises(VkontakteError):
+            post.fetch_statistic(date_from=date.today() - timedelta(2), date_to=date.today())
