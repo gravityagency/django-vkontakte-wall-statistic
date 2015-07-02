@@ -79,15 +79,13 @@ class PostStatistic(VkontakteModel, PostStatisticAbstract):
     """
     Post statistic model collecting information
     """
-    methods_namespace = 'stats'
-
     post = models.ForeignKey(Post, verbose_name=u'Сообщение', related_name='statistics')
     date = models.DateField(u'Дата', db_index=True)
     period = models.PositiveSmallIntegerField(
         u'Период', choices=((1, u'День'), (30, u'Месяц')), default=1, db_index=True)
 
     objects = models.Manager()
-    remote = PostStatisticRemoteManager(remote_pk=('post', 'date'), methods={
+    remote = PostStatisticRemoteManager(remote_pk=('post', 'date'), methods_namespace='stats', methods={
         'get': 'getPostStats',
     })
 
@@ -147,8 +145,6 @@ class PostReach(VkontakteModel):
     """
     Post reach model
     """
-    methods_namespace = 'stats'
-
     post = models.OneToOneField(Post, verbose_name=u'Сообщение', related_name='reach', primary_key=True)
 
     hide = models.PositiveIntegerField()
@@ -161,7 +157,7 @@ class PostReach(VkontakteModel):
     unsubscribe = models.PositiveIntegerField()
 
     objects = models.Manager()
-    remote = PostReachRemoteManager(remote_pk=('post',), methods={
+    remote = PostReachRemoteManager(remote_pk=('post',), methods_namespace='stats', methods={
         'get': 'getPostReach',
     })
 
