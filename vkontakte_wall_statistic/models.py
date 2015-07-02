@@ -4,6 +4,7 @@ import logging
 from django.db import models
 from django.utils.translation import ugettext as _
 from vkontakte_api.models import VkontakteManager, VkontakteModel
+from vkontakte_groups.models import Group
 from vkontakte_wall.models import Post
 
 log = logging.getLogger('vkontakte_wall_statistic')
@@ -20,10 +21,21 @@ class PostStatisticRemoteManager(VkontakteManager):
         return super(PostStatisticRemoteManager, self).fetch(*args, **kwargs)
 
 
-class PostStatisticAbstract(models.Model):
+class PostReachRemoteManager(VkontakteManager):
 
-    class Meta:
-        abstract = True
+    def fetch(self, post, *args, **kwargs):
+        kwargs['owner_id'] = post.owner.remote_id
+        if isinstance(post.owner, Group):
+            kwargs['owner_id'] *= -1
+        kwargs['post_id'] = post.remote_id_short
+        kwargs['extra_fields'] = {'post_id': post.id}
+        return super(PostReachRemoteManager, self).fetch(*args, **kwargs)
+
+    def parse_response(self, response, extra_fields=None):
+        return self.parse_response_dict(response[0], extra_fields)
+
+
+class PostStatisticAbstract(models.Model):
 
     reach = models.PositiveIntegerField(u'Полный охват', default=0)
     reach_subscribers = models.PositiveIntegerField(u'Охват подписчиков', default=0)
@@ -59,17 +71,14 @@ class PostStatisticAbstract(models.Model):
     reach_females_age_35_45 = models.PositiveIntegerField(u'Охват по женщинам от 35 до 45', default=0)
     reach_females_age_45 = models.PositiveIntegerField(u'Охват по женщинам от 45', default=0)
 
+    class Meta:
+        abstract = True
+
 
 class PostStatistic(VkontakteModel, PostStatisticAbstract):
-
-    '''
+    """
     Post statistic model collecting information
-    '''
-    class Meta:
-        verbose_name = _('Vkontakte post statistic')
-        verbose_name_plural = _('Vkontakte post statistics')
-        unique_together = ('post', 'date', 'period')
-
+    """
     methods_namespace = 'stats'
 
     post = models.ForeignKey(Post, verbose_name=u'Сообщение', related_name='statistics')
@@ -82,10 +91,15 @@ class PostStatistic(VkontakteModel, PostStatisticAbstract):
         'get': 'getPostStats',
     })
 
+    class Meta:
+        verbose_name = _('Vkontakte post statistic')
+        verbose_name_plural = _('Vkontakte post statistics')
+        unique_together = ('post', 'date', 'period')
+
     def parse(self, response):
-        '''
+        """
         Transform response for correct parsing it in parent method
-        '''
+        """
         response['date'] = response.pop('day')
 
         fields_map = {
@@ -128,3 +142,29 @@ class PostStatistic(VkontakteModel, PostStatisticAbstract):
                     response['reach_' + fields_map[response_field][item['value']]] = item['reach']
 
         return super(PostStatistic, self).parse(response)
+
+class PostReach(VkontakteModel):
+    """
+    Post reach model
+    """
+    methods_namespace = 'stats'
+
+    post = models.OneToOneField(Post, verbose_name=u'Сообщение', related_name='reach', primary_key=True)
+
+    hide = models.PositiveIntegerField()
+    join_group = models.PositiveIntegerField()
+    links = models.PositiveIntegerField()
+    reach_subscribers = models.PositiveIntegerField()
+    reach_total = models.PositiveIntegerField()
+    report = models.PositiveIntegerField()
+    to_group = models.PositiveIntegerField()
+    unsubscribe = models.PositiveIntegerField()
+
+    objects = models.Manager()
+    remote = PostReachRemoteManager(remote_pk=('post',), methods={
+        'get': 'getPostReach',
+    })
+
+    class Meta:
+        verbose_name = _('Vkontakte post reach')
+        verbose_name_plural = _('Vkontakte post reaches')

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import date, timedelta
+from django.core.exceptions import ObjectDoesNotExist
 
 import mock
 import simplejson as json
@@ -11,6 +12,7 @@ from .models import PostStatistic
 
 GROUP_ID = 16297716
 POST_ID = '-16297716_262399'
+POST_REACH_ID = '-16297716_400626'
 
 
 def get_error(*args, **kwargs):
@@ -122,3 +124,24 @@ class VkontakteWallStatisticTest(TestCase):
 
         with self.assertRaises(VkontakteError):
             post.fetch_statistic(date_from=date.today() - timedelta(2), date_to=date.today())
+
+    def test_fetch_post_reach(self):
+
+        group = GroupFactory(remote_id=GROUP_ID)
+        post = PostFactory(remote_id=POST_REACH_ID, owner=group)
+
+        with self.assertRaises(ObjectDoesNotExist):
+            post.reach
+
+        post.fetch_reach()
+        post = post.__class__.objects.get(pk=post.pk)
+
+        self.assertGreaterEqual(post.reach.hide, 0)
+        self.assertGreaterEqual(post.reach.join_group, 0)
+        self.assertGreaterEqual(post.reach.links, 0)
+        self.assertGreaterEqual(post.reach.reach_subscribers, 0)
+        self.assertGreaterEqual(post.reach.reach_total, 0)
+        self.assertGreaterEqual(post.reach.report, 0)
+        self.assertGreaterEqual(post.reach.to_group, 0)
+        self.assertGreaterEqual(post.reach.unsubscribe, 0)
+
