@@ -4,8 +4,8 @@ from django.core.exceptions import ObjectDoesNotExist
 
 import mock
 import simplejson as json
-from django.test import TestCase
 from vkontakte_api.api import VkontakteError
+from vkontakte_api.tests import VkontakteApiTestCase
 from vkontakte_wall.factories import GroupFactory, PostFactory
 
 from .models import PostStatistic
@@ -23,7 +23,7 @@ def get_error(*args, **kwargs):
          {"key": "date_to", "value": "2015-05-02"}, {"key": "group_id", "value": "22130230"}]}}]
 
 
-class VkontakteWallStatisticTest(TestCase):
+class VkontakteWallStatisticTest(VkontakteApiTestCase):
     def test_parse_post(self):
         response = '''{"age": [{"reach": 2153, "value": "12-18"},
                   {"reach": 1113, "value": "18-21"},

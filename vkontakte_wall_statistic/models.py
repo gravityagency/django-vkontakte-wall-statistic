@@ -141,20 +141,21 @@ class PostStatistic(VkontakteModel, PostStatisticAbstract):
 
         return super(PostStatistic, self).parse(response)
 
+
 class PostReach(VkontakteModel):
     """
     Post reach model
     """
     post = models.OneToOneField(Post, verbose_name=u'Сообщение', related_name='reach', primary_key=True)
 
-    hide = models.PositiveIntegerField()
-    join_group = models.PositiveIntegerField()
-    links = models.PositiveIntegerField()
-    reach_subscribers = models.PositiveIntegerField()
-    reach_total = models.PositiveIntegerField()
-    report = models.PositiveIntegerField()
-    to_group = models.PositiveIntegerField()
-    unsubscribe = models.PositiveIntegerField()
+    hide = models.PositiveIntegerField(db_index=True)
+    join_group = models.PositiveIntegerField(db_index=True)
+    links = models.PositiveIntegerField(db_index=True)
+    reach_subscribers = models.PositiveIntegerField(db_index=True)
+    reach_total = models.PositiveIntegerField(db_index=True)
+    report = models.PositiveIntegerField(db_index=True)
+    to_group = models.PositiveIntegerField(db_index=True)
+    unsubscribe = models.PositiveIntegerField(db_index=True)
 
     objects = models.Manager()
     remote = PostReachRemoteManager(remote_pk=('post',), methods_namespace='stats', methods={
